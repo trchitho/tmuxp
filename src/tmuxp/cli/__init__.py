@@ -194,7 +194,7 @@ def create_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="subparser_name")
     load_parser = subparsers.add_parser(
         "load",
-        help="load tmuxp workspaces",
+        help="load tmuxp workspaces (supports wildcards)",
         description=LOAD_DESCRIPTION,
         formatter_class=formatter_class,
     )
