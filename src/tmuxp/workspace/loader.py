@@ -10,7 +10,10 @@ import typing as t
 logger = logging.getLogger(__name__)
 
 
-def expandshell(value: str) -> str:
+def expandshell(value: str | None) -> str:
+    if value is None:
+        return ""
+    return os.path.expandvars(os.path.expanduser(value))  # NOQA: PTH111
     """Resolve shell variables based on user's ``$HOME`` and ``env``.
 
     :py:func:`os.path.expanduser` and :py:func:`os.path.expandvars`.
@@ -28,23 +31,30 @@ def expandshell(value: str) -> str:
     return os.path.expandvars(os.path.expanduser(value))  # NOQA: PTH111
 
 
-def expand_cmd(p: dict[str, t.Any]) -> dict[str, t.Any]:
+def expand_cmd(p: dict[str, t.Any] | None) -> dict[str, t.Any]:
+    if p is None:
+        return {"shell_command": []}
     """Resolve shell variables and expand shorthands in a tmuxp config mapping."""
     if isinstance(p, str):
         p = {"shell_command": [p]}
+elif p is None:
+        p = {"shell_command": []}
     elif isinstance(p, list):
         p = {"shell_command": p}
     elif not p:
         p = {"shell_command": []}
 
     assert isinstance(p, dict)
-    if "shell_command" in p:
+    if "shell_command" in p and p["shell_command"]:
         cmds = p["shell_command"]
 
         if isinstance(p["shell_command"], str):
             cmds = [cmds]
 
         if not cmds or any(a == cmds for a in [None, "blank", "pane"]):
+            cmds = []
+
+        if isinstance(cmds, list) and len(cmds) == 1 and any(a in cmds for a in [None, "blank", "pane"]):
             cmds = []
 
         if (
@@ -68,7 +78,7 @@ def expand_cmd(p: dict[str, t.Any]) -> dict[str, t.Any]:
 def expand(
     workspace_dict: dict[str, t.Any],
     cwd: pathlib.Path | str | None = None,
-    parent: t.Any | None = None,
+    parent: dict[str, t.Any] | None = None,
 ) -> dict[str, t.Any]:
     """Resolve workspace variables and expand shorthand style / inline properties.
 
@@ -140,7 +150,7 @@ def expand(
 
     # Any workspace section, session, window, pane that can contain the
     # 'shell_command' value
-    if "start_directory" in workspace_dict:
+    if "start_directory" in workspace_dict and workspace_dict["start_directory"]:
         workspace_dict["start_directory"] = expandshell(
             workspace_dict["start_directory"],
         )
@@ -159,18 +169,18 @@ def expand(
 
             workspace_dict["start_directory"] = start_path
 
-    if "before_script" in workspace_dict:
+    if "before_script" in workspace_dict and workspace_dict["before_script"]:
         workspace_dict["before_script"] = expandshell(workspace_dict["before_script"])
         if any(workspace_dict["before_script"].startswith(a) for a in [".", "./"]):
             workspace_dict["before_script"] = str(cwd / workspace_dict["before_script"])
 
-    if "shell_command" in workspace_dict and isinstance(
+    if "shell_command" in workspace_dict and workspace_dict["shell_command"] and isinstance(
         workspace_dict["shell_command"],
         str,
     ):
         workspace_dict["shell_command"] = [workspace_dict["shell_command"]]
 
-    if "shell_command_before" in workspace_dict:
+    if "shell_command_before" in workspace_dict and workspace_dict["shell_command_before"]:
         shell_command_before = workspace_dict["shell_command_before"]
 
         workspace_dict["shell_command_before"] = expand_cmd(shell_command_before)
