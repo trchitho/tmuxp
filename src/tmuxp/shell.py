@@ -8,6 +8,8 @@ import os
 import pathlib
 import typing as t
 
+from tmuxp.exc import TmuxpException
+
 logger = logging.getLogger(__name__)
 
 if t.TYPE_CHECKING:
