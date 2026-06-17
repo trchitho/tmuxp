@@ -79,6 +79,40 @@ def in_dir(
         if is_workspace_file(filename, extensions) and not filename.startswith(".")
     ]
 
+def find_workspace_files_in_dir(
+    search_dir: pathlib.Path | str | None = None,
+    extensions: list[ValidExtensions] | None = None,
+) -> list[pathlib.Path]:
+    """
+    Find all workspace files in a given directory.
+
+    Parameters
+    ----------
+    search_dir : pathlib.Path | str | None
+        The directory to search within. Defaults to the current working directory.
+    extensions : list[ValidExtensions] | None
+        A list of file extensions to look for. Defaults to ['.yml', '.yaml', '.json'].
+
+    Returns
+    -------
+    list[pathlib.Path]
+        A list of pathlib.Path objects pointing to found workspace files.
+    """
+    if search_dir is None:
+        search_dir = pathlib.Path.cwd()
+    else:
+        search_dir = pathlib.Path(search_dir)
+
+    if extensions is None:
+        extensions = [".yml", ".yaml", ".json"]
+
+    found_files: list[pathlib.Path] = []
+    for item in search_dir.iterdir():
+        if item.is_file() and is_workspace_file(item.name, extensions):
+            found_files.append(item)
+
+    return found_files
+
 
 def in_cwd() -> list[str]:
     """
