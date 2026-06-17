@@ -97,7 +97,7 @@ if t.TYPE_CHECKING:
 class CLILoadNamespace(argparse.Namespace):
     """Typed :class:`argparse.Namespace` for tmuxp load command."""
 
-    workspace_files: list[str]
+    workspace_files: list[str] | str
     socket_name: str | None
     socket_path: str | None
     tmux_config_file: str | None
